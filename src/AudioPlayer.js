@@ -48,6 +48,7 @@ const AudioPlayer = () => {
     <div>
       <div>{text}</div>
       {audioURL && <audio controls src={audioURL} />}
+      console.log(audioURL)
     </div>
   );
 };

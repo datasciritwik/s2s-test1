@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Audio Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .response {
+            margin-top: 20px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Record and Upload Audio</h1>
+        <div class="controls">
+            <button id="start-record">Start Recording</button>
+            <button id="stop-record" disabled>Stop Recording</button>
+        </div>
+        <div class="response" id="response">
+            <h2>Response</h2>
+            <p><strong>Text:</strong> <span id="text-response"></span></p>
+            <p><strong>Audio:</strong> <audio controls id="audio-response"></audio></p>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        document.getElementById('start-record').addEventListener('click', async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioChunks = [];
+
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'recording.webm');
+
+                const response = await fetch('http://localhost:8000/upload-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('text-response').textContent = data.text;
+
+                    const audioBase64 = data.audio;
+                    const audioUrl = `data:audio/wav;base64,${audioBase64}`;
+                    document.getElementById('audio-response').src = audioUrl;
+                } else {
+                    alert('Failed to upload audio file.');
+                }
+            };
+
+            mediaRecorder.start();
+            document.getElementById('start-record').disabled = true;
+            document.getElementById('stop-record').disabled = false;
+        });
+
+        document.getElementById('stop-record').addEventListener('click', () => {
+            mediaRecorder.stop();
+            document.getElementById('start-record').disabled = false;
+            document.getElementById('stop-record').disabled = true;
+        });
+    </script>
+</body>
+</html>
