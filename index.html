@@ -40,8 +40,9 @@
         </div>
         <div class="response" id="response">
             <h2>Response</h2>
-            <p><strong>Text:</strong> <span id="text-response"></span></p>
-            <p><strong>Audio:</strong> <audio controls id="audio-response"></audio></p>
+            <p><strong>User Question:</strong> <span id="user-question"></span></p>
+            <p><strong>LLM Response:</strong> <span id="llm-response"></span></p>
+            <p><strong>Audio Response:</strong> <audio controls id="audio-response"></audio></p>
         </div>
     </div>
 
@@ -71,7 +72,8 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('text-response').textContent = data.text;
+                    document.getElementById('user-question').textContent = data.userQuestion;
+                    document.getElementById('llm-response').textContent = data.text;
 
                     const audioBase64 = data.audio;
                     const audioUrl = `data:audio/wav;base64,${audioBase64}`;
